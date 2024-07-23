@@ -1,2 +1,2 @@
 # FinEconLiteratureSearch
-This is project is to make searching Finance and Economics Journals more efficientyly
+This is project is to make searching Finance and Economics Journals more efficienty
