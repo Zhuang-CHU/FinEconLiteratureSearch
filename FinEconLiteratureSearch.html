@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Scholar Journal Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 500px;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: calc(100% - 24px);
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .checkboxes {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .checkboxes label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        input[type="submit"] {
+            width: 100%;
+            padding: 10px 20px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #4285f4;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #357ae8;
+        }
+        select {
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Search Journals and NBER on Google Scholar</h1>
+        <form id="searchForm">
+            <input type="text" id="query" name="query" placeholder="Enter search query" required>
+            <select id="timeRange">
+                <option value="">All Time</option>
+                <option value="3">Latest 3 Years</option>
+                <option value="5">Latest 5 Years</option>
+                <option value="10">Latest 10 Years</option>
+            </select>
+            <div class="checkboxes">
+                <label><input type="checkbox" id="financeCheckbox"> Top 3 Finance Journals</label>
+                <label><input type="checkbox" id="otherFinanceCheckbox"> Other 3 Finance Journals</label>
+                <label><input type="checkbox" id="econCheckbox"> Top 5 Econ Journals</label>
+                <label><input type="checkbox" id="nberCheckbox"> Search papers on NBER</label>
+            </div>
+            <input type="submit" value="Search">
+        </form>
+    </div>
+    <script>
+        function buildSearchUrl(query, journals, timeRange) {
+            const journalQuery = journals.map(journal => `source:"${journal}"`).join(' OR ');
+            const excludeJournals = [
+                'The Journal of Finance and Data Science',
+                'Journal of Financial Economics and Banking',
+                'Computational Management Science',
+                'Junior Management Science',
+                'International Review of Finance',
+                'Review of Finance & Banking',
+                "Management Science Letters"
+            ];
+            const excludePatterns = [
+                '-source:"business"',
+                '-source:"Operations Research"',
+                '-source:"Conference"',
+                '-source:"of Management Science"',
+                '-source:"notes"',
+                '-source:"Letter"',
+                '-source:"Advanced"',
+                '-source:"Pest"',
+                '-source:"International"',
+                '-source:"public"',
+                '-source:"theory and practice"',
+                '-source:"chain"',
+                '-source:"Engineering"',
+                '-source:"System"',
+                '-source:"Economics Finance"',
+                '-source:"and Management"',
+                '-source:"Technology"',
+                '-source:"Center"',
+                '-source:"Health"',
+                '-source:"Emergency"',
+                '-source:"Letters"',
+                '-source:"China"',
+                '-source:"Brazilian"',
+                '-source:"Iranian"'
+                
+                
+                
+            ];
+            const excludeQuery = excludeJournals.map(journal => `-source:"${journal}"`).join(' ');
+            const excludePatternQuery = excludePatterns.join(' ');
+
+            let searchUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(query)} ${encodeURIComponent(journalQuery)} ${encodeURIComponent(excludeQuery)} ${excludePatternQuery}`;
+            
+            if (timeRange) {
+                const currentYear = new Date().getFullYear();
+                const startYear = currentYear - timeRange;
+                searchUrl += `&as_ylo=${startYear}`;
+            }
+            
+            return searchUrl;
+        }
+
+        document.getElementById('searchForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const query = document.getElementById('query').value;
+            const timeRange = document.getElementById('timeRange').value;
+
+            const financeJournals = [
+                'The Journal of Finance',
+                'Journal of Financial Economics',
+                'The Review of Financial Studies'
+            ];
+            const otherFinanceJournals = [
+                'Management Science',
+                'Journal of Financial and Quantitative Analysis',
+                'Review of Finance'
+            ];
+            const econJournals = [
+                'American Economic Review',
+                'Quarterly Journal of Economics',
+                'Journal of Political Economy',
+                'Econometrica',
+                'Review of Economic Studies'
+            ];
+
+            let selectedJournals = [];
+            if (document.getElementById('financeCheckbox').checked) {
+                selectedJournals = selectedJournals.concat(financeJournals);
+            }
+            if (document.getElementById('otherFinanceCheckbox').checked) {
+                selectedJournals = selectedJournals.concat(otherFinanceJournals);
+            }
+            if (document.getElementById('econCheckbox').checked) {
+                selectedJournals = selectedJournals.concat(econJournals);
+            }
+
+            let searchUrl;
+            if (document.getElementById('nberCheckbox').checked) {
+                searchUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(query)}+site:nber.org`;
+                if (timeRange) {
+                    const currentYear = new Date().getFullYear();
+                    const startYear = currentYear - timeRange;
+                    searchUrl += `&as_ylo=${startYear}`;
+                }
+            } else {
+                if (selectedJournals.length === 0) {
+                    alert('Please select at least one journal group or NBER.');
+                    return;
+                }
+                searchUrl = buildSearchUrl(query, selectedJournals, timeRange);
+            }
+
+            window.open(searchUrl, '_blank');
+        });
+    </script>
+</body>
+</html>
